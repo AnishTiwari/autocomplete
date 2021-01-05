@@ -17,7 +17,9 @@ struct state {
 
 struct edge {
   char symbol;
-  char* state;
+  int mem_count;
+ char state[][2];
+ 
 };
 
 struct nfa{
