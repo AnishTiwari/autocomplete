@@ -15,6 +15,7 @@ int** create2d(int row, int col){
 
 nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
 
+  
   printf("%d\n", word_l);
   printf("%d\n", dist);
   for(int i = 0; i < word_l ; i++){
@@ -31,30 +32,21 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
       new_e_correct->mem_count = -1;
       new_e_correct->symbol = word[i];
 
-      char* temp = NULL;
-      temp = malloc(sizeof(char) * 2);
-      sprintf(temp,"%d%d", i+1,j); 
-      new_e_correct->state[++new_e_correct->mem_count][0] = *temp;
+      sprintf(new_e_correct->estate[++new_e_correct->mem_count] ,"%d%d", i+1, j);
       
       if(new_s->edge_count == -1) {
 	new_s->edges = malloc(sizeof(e));
-	new_s->edges[++new_s->edge_count] = *new_e_correct;   
+	
+	memcpy(&new_s->edges[++new_s->edge_count] , new_e_correct, sizeof(e));   
+	printf("7777 %s\n", new_s->edges[0].estate[0]);
       }
       
       /* add edge for deletion */
       e_t new_e_star = malloc(sizeof(e));
       new_e_star->symbol = '*';
-      char* temp1 = NULL;  
-      temp1 = malloc(sizeof(char) * 2);
-      sprintf(temp1, "%d%d", i, j+1);  
-      new_e_star->state[++new_e_star->mem_count][0] = *temp1;
-
-
-      char* temp2 = NULL;  
-      temp2 = malloc(sizeof(char) * 2);
-      sprintf(temp2, "%d%d", i+1, j+1);  
-      new_e_star->state[++new_e_correct->mem_count][1] = *temp2;
-
+      sprintf(new_e_star->estate[++new_e_correct->mem_count] ,"%d%d", i,j+1);
+      sprintf(new_e_star->estate[++new_e_correct->mem_count] ,"%d%d", i+1, j+1);
+  
       
       if(new_s->edge_count == -1) {
 	new_s->edges = malloc(sizeof(e));
@@ -95,7 +87,7 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
       e_t last_edge = malloc(sizeof(e));
       last_edge->symbol = '*';
       last_edge->mem_count = -1;
-      sprintf(&last_edge->state[++last_edge->mem_count][0], "%d%d", i, j+1);
+      sprintf(last_edge->estate[++last_edge->mem_count], "%d%d", i, j+1);
 
       last_states->edges = malloc(sizeof(e));
       last_states->edges = last_edge;
@@ -128,7 +120,7 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
       e_t last_edge = malloc(sizeof(e));
       last_edge->symbol = word[i];
       last_edge->mem_count = -1;
-      sprintf(&last_edge->state[++last_edge->mem_count][0], "%d%d", i+1, j);
+      sprintf(last_edge->estate[++last_edge->mem_count], "%d%d", i+1, j);
 
       last_states->edges = malloc(sizeof(e));
       last_states->edges = last_edge;
@@ -154,21 +146,31 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
   final_state->state = malloc(sizeof(char) * 2);
   sprintf(final_state->state, "%d%d", word_l,dist);
 
-      if(nfa->state_count == -1) {
-	nfa->states = malloc(sizeof(s));
-	nfa->states[0] = *final_state;
-	nfa->state_count++;
-      }
+  if(nfa->state_count == -1) {
+    nfa->states = malloc(sizeof(s));
+    nfa->states[0] = *final_state;
+    nfa->state_count++;
+  }
       
-      else {
-	nfa->state_count++;
-	nfa->states = realloc(nfa->states, sizeof(s) * (nfa->state_count +1) );
-	nfa->states[nfa->state_count] = *final_state;	
-      }
+  else {
+    nfa->state_count++;
+    nfa->states = realloc(nfa->states, sizeof(s) * (nfa->state_count +1) );
+    nfa->states[nfa->state_count] = *final_state;	
+  }
   
   return nfa;
 }
 
+void print_nfa(nfa_t nfa){
+
+  for(int i=0; i < nfa->state_count ;i++){
+
+    printf("%s ---( %c )--> %s\n",nfa->states[i].state, nfa->states[i].edges[0].symbol, nfa->states[i].edges[0].estate[0]);
+
+
+  }
+
+}
 
 int main(int argc, char *argv[]){
 
@@ -192,6 +194,8 @@ int main(int argc, char *argv[]){
   
   nfa = construct_nfa(nfa, word, lev_dist, word_len);
   printf("%d states\n", nfa->state_count+1);
+  print_nfa(nfa);
+
   /* find_matches(word, lev_dist, word_len); */
   return 0;
 }
