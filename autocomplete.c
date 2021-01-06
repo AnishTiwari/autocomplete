@@ -25,20 +25,22 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
       new_s->state = malloc(sizeof(char) * 2);
       sprintf(new_s->state, "%d%d", i, j);
       new_s->edge_count = -1;
-      new_s->edges = NULL;
        
       /* add edge for correct symbol (same level but diff state 00, 01, 02...) */ 
       e_t new_e_correct = malloc(sizeof(e));
       new_e_correct->mem_count = -1;
       new_e_correct->symbol = word[i];
-
-      sprintf(new_e_correct->estate[++new_e_correct->mem_count] ,"%d%d", i+1, j);
-      
+      char* temp = NULL;
+      temp =malloc(sizeof(char)* 2);
+      sprintf(temp ,"%d%d", i+1, j);
+      ++new_e_correct->mem_count;
+      strcpy(new_e_correct->estate[new_e_correct->mem_count] , temp);
       if(new_s->edge_count == -1) {
 	new_s->edges = malloc(sizeof(e));
-	
-	memcpy(&new_s->edges[++new_s->edge_count] , new_e_correct, sizeof(e));   
-	printf("7777 %s\n", new_s->edges[0].estate[0]);
+	++new_s->edge_count;
+	new_s->edges[new_s->edge_count] = *new_e_correct;
+	strcpy(	new_s->edges[new_s->edge_count].estate[new_s->edges[++new_s->edge_count].mem_count] , temp); 
+	printf("7777 %s %s %s -\n", new_e_correct->estate[0], temp, new_s[0].edges[0].estate[0]);
       }
       
       /* add edge for deletion */
@@ -69,9 +71,7 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
 	nfa->state_count++;
 	nfa->states = realloc(nfa->states, sizeof(s) * (nfa->state_count +1) );
 	nfa->states[nfa->state_count] = *new_s;	
-      }
-
-      
+      }      
     }
   } /* end of for loops */
 
