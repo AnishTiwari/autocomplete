@@ -4,16 +4,6 @@
 
 #include "autocomplete.h"
 
-int** create2d(int row, int col){
-
-  int **arr = calloc(row , sizeof( int *)); 
-  for(int i = 0; i < row; i++) 
-    arr[i] = calloc(col , sizeof(int)); 
-
-  return arr;
-}
-
-
 main_t global_state_table = NULL;
 
 nfa_table_t dfa_state = NULL;
@@ -36,7 +26,7 @@ int INITIAL_COUNT = -1;
 
 s_t find_state(char* state_name, nfa_t nfa){
 
-  for(int p=0; p < nfa->state_count; p++){
+  for(int p=0; p <= nfa->state_count; p++){
     if( strcmp(nfa->states[p].state, state_name) == 0){
       return &nfa->states[p];
     }
@@ -56,8 +46,10 @@ void insert_dfa(char* dfa_state_name){
   HASH_ADD_STR(dfa_state, state_name, new_dfa_state);
 }
 
-void insert_into_state(char* state_name, int is_multiple, int idx_v){
+void insert_into_state(char* s_name, int is_multiple){
 
+  INITIAL_COUNT += 1; 
+  int idx_v = INITIAL_COUNT;
   main_t new_idx = malloc(sizeof(main_hash));
   new_idx->idx = idx_v;
   main_t temp_main = NULL;
@@ -70,24 +62,31 @@ void insert_into_state(char* state_name, int is_multiple, int idx_v){
     exit(1);
   }
    
-  nfa_table_t new_state = malloc(sizeof(nfa_table));
-  new_state->is_multiple = is_multiple;
-  new_state->state_name = malloc(sizeof(char) * strlen(state_name));
-  strcpy(new_state->state_name, state_name);
+  nfa_table_t new_state = NULL;
+  new_state = malloc(sizeof(nfa_table));
   nfa_table_t state_exists = NULL;
-   
-  HASH_FIND_STR(global_state_table,new_state->state_name, state_exists);
+  
+  new_state->is_multiple = is_multiple;
+  new_state->state_name = malloc(sizeof(char) * strlen(s_name));
+  strcpy(new_state->state_name, s_name);
+
+  HASH_FIND_STR(new_idx->nfa_table, s_name, state_exists);
   if (state_exists == NULL){
-    HASH_ADD_STR(global_state_table->nfa_table, state_name, new_state);
+    HASH_ADD_STR(new_idx->nfa_table, state_name, new_state);
+  }
+  else{
+    printf("GOLDEN EROR\n");
   }
 
-  INITIAL_COUNT += 1; 
+  /* print the global state table */
+  main_t te = NULL;
+  for(te=global_state_table; te != NULL; te=te->hh.next){
+    printf("%d %s++\n",te->idx, te->nfa_table->state_name);
 
+  }
 }
 
-
 nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
-
   
   printf("%d\n", word_l);
   printf("%d\n", dist);
@@ -154,7 +153,7 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
 
       if(nfa->state_count == -1) {
 	nfa->states = malloc(sizeof(s));
-	insert_into_state(new_s->state, new_s->edges[0].mem_count, 0);
+	insert_into_state(new_s->state, 1);
 	insert_dfa(new_s->state);
 	nfa->states[0] = *new_s;
 	printf("8888 %s %s %s -\n", new_e_correct->estate[0], temp, new_s->edges[0].estate[0]);
@@ -194,7 +193,7 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
       
       if(nfa->state_count == -1) {
 	nfa->states = malloc(sizeof(s));
-	insert_into_state(last_states->state, last_states->edges[0].mem_count, 0);
+	insert_into_state(last_states->state, 1);
 
 	nfa->states[0] = *last_states;
 	nfa->state_count++;
@@ -234,7 +233,7 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
       if(nfa->state_count == -1) {
 	nfa->states = malloc(sizeof(s));
 
-	insert_into_state( last_states->state, last_states->edges[0].mem_count, 0);
+	insert_into_state( last_states->state, 1);
 
 	nfa->states[0] = *last_states;
 	nfa->state_count++;
@@ -259,7 +258,7 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
   if(nfa->state_count == -1) {
     nfa->states = malloc(sizeof(s));
 
-    insert_into_state(final_state->state, final_state->edges[0].mem_count, 0);
+    insert_into_state(final_state->state, 1);
 
     nfa->states[0] = *final_state;
     nfa->state_count++;
@@ -279,7 +278,10 @@ void print_nfa(nfa_t nfa){
 
   for(int i=0; i < nfa->state_count ;i++){
 
+    if(nfa->states[i].edges != NULL)
     printf("%s ---( %c )--> %s\n",nfa->states[i].state, nfa->states[i].edges[0].symbol, nfa->states[i].edges[0].estate[0]);
+    else
+      printf("%s\n", nfa->states[i].state);
 
   }
   printf("%s -----> NULL EOA\n",nfa->states[8].state);
@@ -296,14 +298,14 @@ void print_dfa_hash(){
 void post_merge(m_t merge, nfa_t nfa, char* new_state_name){
   m_t tem = NULL;
 
-    s_t new_state = NULL;
-    new_state = malloc(sizeof(s));
-    new_state->state = malloc(sizeof(char) * strlen(new_state_name));
-    strcpy(new_state->state, new_state_name);
-    new_state->edge_count = -1;
-    int is_mul = -1;
+  s_t new_state = NULL;
+  new_state = malloc(sizeof(s));
+  new_state->state = malloc(sizeof(char) * strlen(new_state_name));
+  strcpy(new_state->state, new_state_name);
+  new_state->edge_count = -1;
+  int is_mul = -1;
 
-    /* iterate through all symbols */
+  /* iterate through all symbols */
   for(tem=merge; tem!= NULL; tem=tem->hh.next){
     tr_t tr_temp = NULL;
     new_state->edges = malloc(sizeof(e));
@@ -315,35 +317,35 @@ void post_merge(m_t merge, nfa_t nfa, char* new_state_name){
 
       (v > is_mul)?is_mul=v:is_mul;
       new_state->edges[new_state->edge_count].mem_count++;
+     
       new_state->edges[new_state->edge_count].estate[new_state->edges[new_state->edge_count].mem_count] = malloc(sizeof(char) * strlen(tr_temp->tarnsfer_state));
+     
+	
       strcpy(new_state->edges[new_state->edge_count].estate[new_state->edges[new_state->edge_count].mem_count] , tr_temp->tarnsfer_state);
 
     }
 
   }
-      nfa->state_count++;
-    
-    nfa->states = realloc(nfa->states, sizeof(s) * (nfa->state_count +1) );
-    nfa->states[nfa->state_count] = *new_state;	
+  nfa->state_count++;
+  printf("ADDED A NEW STATE %s with count %d\n",new_state->state,nfa->state_count+1);   
+  nfa->states = realloc(nfa->states, sizeof(s) * (nfa->state_count +1) );
+  nfa->states[nfa->state_count] = *new_state;	
 
     
-    insert_into_state(new_state->state, is_mul, INITIAL_COUNT );
-     
-
-    /* a new entry to dfa */
+  insert_into_state(new_state->state, is_mul);
+  /* a new entry to dfa */
    
 }
 
 void merge_states(s_t state, nfa_t nfa){
 
-  for(int i=0; i < state->edge_count; i++){
+  for(int i=0; i <= state->edge_count; i++){
 
     if(state->edges[i].mem_count > 0){
       m_t merged =NULL;
-
       tr_t tra = NULL;
       char* temp =NULL;
-      for(int j =0 ; j < state->edges[i].mem_count; j++){
+      for(int j =0 ; j <= state->edges[i].mem_count; j++){
 	if(temp == NULL){
 	  temp = malloc(sizeof(char) * strlen(state->edges[i].estate[j]));
 	  strcpy(temp, state->edges[i].estate[j]);
@@ -354,16 +356,20 @@ void merge_states(s_t state, nfa_t nfa){
 	}
 
 	s_t curr_state = find_state(state->edges[i].estate[j], nfa);
-
+	if(curr_state->edge_count == -1)
+	  {
+	    continue;
+	  }
 	for(int x=0; x <= curr_state->edge_count; x++){
 	  m_t temp_merged =NULL;
 	  HASH_FIND_STR(merged, &curr_state->edges[x].symbol, temp_merged);
 	  if(temp_merged == NULL){
 	    temp_merged = malloc(sizeof(m));
-	    temp_merged->symbol =malloc(sizeof(char) * 2);
-	    strcpy(temp_merged->symbol ,&curr_state->edges[x].symbol);
+	    temp_merged->symbol =malloc(sizeof(char) * 1);
+	    strcpy(temp_merged->symbol, &curr_state->edges[x].symbol);
 	    HASH_ADD_STR(merged, symbol, temp_merged);
 	  }
+
 	  for(int y=0; y <= curr_state->edges[x].mem_count; y++){
 	    tr_t temp_trans = NULL;
 	    
@@ -371,60 +377,66 @@ void merge_states(s_t state, nfa_t nfa){
 	    if( temp_trans == NULL){
 	      temp_trans = malloc(sizeof(tr));
 	      temp_trans->tarnsfer_state = malloc(sizeof(char) * strlen(curr_state->edges[x].estate[y]));
+	      strcpy(temp_trans->tarnsfer_state, curr_state->edges[x].estate[y]);
 	      HASH_ADD_STR(tra, tarnsfer_state, temp_trans);
 	    }
 	  }
-
 	}
 	/* add to the key {'o' : {'10'}, {'11'} } */
 	HASH_ADD_STR(merged->tstate, tarnsfer_state, tra); 
+
 	/* check if the merged state name already exists
 	   in the nfa table if it exists do nothing else
 	   use the mergerd hash table to form a new entry in nfa
-*/
-	if(find_state(temp,nfa) != NULL)
-	post_merge(merged, nfa, temp);
+	*/
+	if(find_state(temp,nfa) == NULL)
+	  post_merge(merged, nfa, temp);
+
 	else{
+	  printf("%s already exists in nfa\n", temp);
+	  nfa_table_t dfa_exists = NULL;
+	  /* check if state already exists in dfa state hash */
+	  HASH_FIND_STR(dfa_state, temp, dfa_exists );
+	  if(dfa_exists == NULL){
 
-      nfa_table_t dfa_exists = NULL;
-      /* check if state already exists in dfa state hash */
-      HASH_FIND_STR(dfa_state, temp, dfa_exists );
-      if(dfa_exists == NULL){
-
-	  printf("MERGED STATES %s ALREADY EXISTS both in nfa, dfa\n", temp);
+	    printf("MERGED STATES %s ALREADY EXISTS both in nfa, dfa\n", temp);
 
 	  }
 	  else{
-	insert_dfa(temp);
-
+	    insert_dfa(temp);
 	  }
 	}
       }
+      free(merged);
+      free(tra);
     }
+
     else{
 
+      printf("SINGLE STATE: %s\n",state->edges[i].estate[0]);
       /*  add the state if not exists */
 
       nfa_table_t dfa_exists = NULL;
       /* check if state already exists in dfa state hash */
-      HASH_FIND_STR(dfa_state, state->edges[i].estate[0]  , dfa_exists );
+      HASH_FIND_STR(dfa_state, state->edges[i].estate[0], dfa_exists );
       if(dfa_exists == NULL){
 	insert_dfa(state->edges[i].estate[0]);
-	INITIAL_COUNT ++;
 	int is_multiple = 0;
-	for(int e_c =0; e_c < state->edge_count; e_c++){
-	  if(state->edges[e_c].mem_count > is_multiple)
-	    {  is_multiple = state->edges[e_c].mem_count;
+	s_t foreign = find_state(state->edges[i].estate[0] ,nfa);
+	for(int e_c =0; e_c <= foreign->edge_count; e_c++){
+	  if(foreign->edges[e_c].mem_count > is_multiple)
+	    {  is_multiple = foreign->edges[e_c].mem_count;
 	      break;
 	    }
 	}
-	insert_into_state(state->state, state->edges->mem_count, is_multiple);
+	insert_into_state(state->edges[i].estate[0], is_multiple);
 	  
       }
 
     }
-
+    
   }
+  
 }
 
 
@@ -433,11 +445,12 @@ void construct_dfa(nfa_t nfa){
   print_dfa_hash();  
   int i = 0;
 
-  main_t get_state = NULL;
   while( i <= INITIAL_COUNT){
+    main_t get_state = NULL;
+    
     HASH_FIND_INT(global_state_table, &i , get_state);
     if(get_state == NULL){
-      perror("Unexpected Behavior : COuld not get state"); 
+      printf("Unexpected Behavior : COuld not get state %d\n",i); 
     }
     
     else {
@@ -446,25 +459,26 @@ void construct_dfa(nfa_t nfa){
       if(st != NULL){
 
 	if( get_state->nfa_table->is_multiple > 0){
-	  /* merge the multiple states for all input symbols */
-	   
+	  /* merge the multiple states for all input symbols */	   
+	  printf("GOT TO MERGE STATES\n");
 	  merge_states(st, nfa);
 	}
 
 	else {
-	    
+
+	  printf("DEAD for %s with is multiple of %d\n", get_state->nfa_table->state_name, get_state->nfa_table->is_multiple);
 	  nfa_table_t dfa_exists = NULL;
 	  /* check if state already exists in dfa state hash */
 	  HASH_FIND_STR(dfa_state, st->state , dfa_exists );
 	  if(dfa_exists == NULL){
 	    insert_dfa(st->state);
-	    INITIAL_COUNT ++;
+	   
 	    int is_multiple = 0;
-	    for(int e_c =0; e_c < st->edge_count; e_c++){
+	    for(int e_c =0; e_c <= st->edge_count; e_c++){
 	      if(st->edges[e_c].mem_count > is_multiple)
 		is_multiple = st->edges[e_c].mem_count;
 	    }
-	    insert_into_state(st->state, st->edges->mem_count, is_multiple);
+	    insert_into_state(st->state, st->edges->mem_count);
 	  }
        
 	}
@@ -474,16 +488,12 @@ void construct_dfa(nfa_t nfa){
 
       else{
 
-
-
-
+	printf("Could not find state %s in nfa\n", get_state->nfa_table->state_name);
       }
 	
     }
     ++i;
   }
-  
-
 }
 
 
@@ -493,9 +503,7 @@ void print_dfa(nfa_t nfa){
 
     for(int j=0; j <= nfa->states[i].edge_count; j++){
 
-
       printf("%s ---( %c )---> %s\n", nfa->states[i].state, nfa->states[i].edges[j].symbol, nfa->states[i].edges[j].estate[0]);
-
 
     }
   }
@@ -525,6 +533,7 @@ int main(int argc, char *argv[]){
 
   printf("%d states\n", nfa->state_count+1);
   print_nfa(nfa);
+
   construct_dfa(nfa);
   /* find_matches(word, lev_dist, word_len); */
 
