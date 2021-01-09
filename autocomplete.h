@@ -31,7 +31,7 @@ struct state {
 };
 
 struct edge {
-  char symbol;
+  char* symbol;
   int mem_count;
  char *estate[6];
  

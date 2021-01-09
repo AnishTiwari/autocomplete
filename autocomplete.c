@@ -101,9 +101,15 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
       /* add edge for correct symbol (same level but diff state 00, 01, 02...) */ 
       e_t new_e_correct = malloc(sizeof(e));
       new_e_correct->mem_count = -1;
-      new_e_correct->symbol = word[i];
+      new_e_correct->symbol = NULL;
+      new_e_correct->symbol = malloc(sizeof(char) * 2);
+strncpy(new_e_correct->symbol, &word[i], 1) ;
+      /* new_e_correct->symbol = &word[i]; */
+
+      printf("==%s==",&word[i]);
+     
       char* temp = NULL;
-      temp =malloc(sizeof(char)* 2);
+      temp = malloc(sizeof(char)* 2);
       sprintf(temp ,"%d%d", i+1, j);
       ++new_e_correct->mem_count;
       new_e_correct->estate[new_e_correct->mem_count] = temp;
@@ -117,7 +123,8 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
      
       /* add edge for deletion */
       e_t new_e_star = malloc(sizeof(e));
-      new_e_star->symbol = '*';
+      new_e_star->symbol =malloc(sizeof(char) * 2);
+      strcpy(new_e_star->symbol, "*");
       new_e_star->mem_count = -1;
       char* temp1=NULL ;
       temp1 = malloc(sizeof(char)*2);
@@ -172,7 +179,8 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
 
   for(int i=word_l; i==word_l; i++){
     for(int j=0;j < dist; j++){
-      s_t last_states = malloc(sizeof(s));
+      s_t last_states = NULL;
+      last_states = malloc(sizeof(s));
       last_states->edge_count = -1;
       last_states->edges = NULL;
 
@@ -180,16 +188,19 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
       sprintf(last_states->state, "%d%d", i,j);
 
       e_t last_edge = malloc(sizeof(e));
-      last_edge->symbol = '*';
+      last_edge->symbol = malloc(sizeof(char) * 2);
+      strcpy(last_edge->symbol, "*");
       last_edge->mem_count = -1;
       char* last_temp =NULL;
       last_temp = malloc(sizeof(char) *2);
       sprintf(last_temp, "%d%d", i, j+1);
       ++last_edge->mem_count;
       last_edge->estate[last_edge->mem_count] = last_temp;
+      
       last_states->edges = malloc(sizeof(e));
-      last_states->edges = last_edge;
-
+      last_states->edge_count++;
+      last_states->edges[0] = *last_edge;
+      
       
       if(nfa->state_count == -1) {
 	nfa->states = malloc(sizeof(s));
@@ -201,7 +212,7 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
       
       else {
 	nfa->state_count++;
-        
+        printf("ADDing %s state at %d loc in nfa \n", last_states->state, nfa->state_count);
 	nfa->states = realloc(nfa->states, sizeof(s) * (nfa->state_count +1) );
 	nfa->states[nfa->state_count] = *last_states;	
       }
@@ -212,7 +223,8 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
   for(int i=0; i < word_l; i++){
     for(int j=dist; j==dist; j++){
 
-      s_t last_states = malloc(sizeof(s));
+      s_t last_states = NULL;
+      last_states = malloc(sizeof(s));
       last_states->edge_count = -1;
       last_states->edges = NULL;
 
@@ -220,7 +232,11 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
       sprintf(last_states->state, "%d%d", i,j);
 
       e_t last_edge = malloc(sizeof(e));
-      last_edge->symbol = word[i];
+      last_edge->symbol = NULL;
+      last_edge->symbol = malloc(sizeof(char) * 2);
+      strncpy(last_edge->symbol, &word[i], 1) ;
+
+      /* strcpy(last_edge->symbol , &word[i]); */
       last_edge->mem_count = -1;
       char* final_temp =NULL;
       final_temp = malloc(sizeof(char)*2);
@@ -228,7 +244,8 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
       
       last_edge->estate[++last_edge->mem_count] = final_temp;
       last_states->edges = malloc(sizeof(e));
-      last_states->edges = last_edge;
+      last_states->edge_count++;
+      last_states->edges[0] = *last_edge;
 
       if(nfa->state_count == -1) {
 	nfa->states = malloc(sizeof(s));
@@ -241,6 +258,8 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
       
       else {
 	nfa->state_count++;
+
+        printf("ADDing %s state at %d loc in nfa \n", last_states->state, nfa->state_count);
 	nfa->states = realloc(nfa->states, sizeof(s) * (nfa->state_count +1) );
 
 	nfa->states[nfa->state_count] = *last_states;	
@@ -249,7 +268,8 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
     }
   }
 
-  s_t final_state = malloc(sizeof(s));
+  s_t final_state = NULL;
+  final_state  = malloc(sizeof(s));
   final_state->edges=NULL;
   final_state->edge_count = -1;
   final_state->state = malloc(sizeof(char) * 2);
@@ -267,6 +287,7 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
   else {
     nfa->state_count++;
     
+        printf("ADDing %s state at %d loc in nfa \n", final_state->state, nfa->state_count);
     nfa->states = realloc(nfa->states, sizeof(s) * (nfa->state_count +1) );
     nfa->states[nfa->state_count] = *final_state;	
   }
@@ -276,15 +297,21 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
 
 void print_nfa(nfa_t nfa){
 
+  printf("GOING TO PRINT %d states in NFA\n", nfa->state_count);
   for(int i=0; i < nfa->state_count ;i++){
 
     if(nfa->states[i].edges != NULL)
-    printf("%s ---( %c )--> %s\n",nfa->states[i].state, nfa->states[i].edges[0].symbol, nfa->states[i].edges[0].estate[0]);
+      {
+	for(int j=0; j <= nfa->states[i].edge_count; j++){
+	  for(int k =0;k <= nfa->states[i].edges[j].mem_count;k++){
+	printf("%s ---( %s )--> %s\n",nfa->states[i].state, nfa->states[i].edges[j].symbol, nfa->states[i].edges[j].estate[k]);
+	  }
+	}
+      }
     else
-      printf("%s\n", nfa->states[i].state);
-
+      printf("NON EDGE states %s\n", nfa->states[i].state);
   }
-  printf("%s -----> NULL EOA\n",nfa->states[8].state);
+  printf("%s -----> edge_count %d NULL EOA ||\n",nfa->states[8].state, nfa->states[4].edge_count);
 }
 
 void print_dfa_hash(){
@@ -311,17 +338,18 @@ void post_merge(m_t merge, nfa_t nfa, char* new_state_name){
     new_state->edges = malloc(sizeof(e));
     new_state->edge_count++;
     new_state->edges[new_state->edge_count].mem_count = -1;
-    strcpy(&new_state->edges[new_state->edge_count].symbol, tem->symbol);
+    new_state->edges[new_state->edge_count].symbol = malloc(sizeof(char) * strlen(tem->symbol));
+    strcpy(new_state->edges[new_state->edge_count].symbol, tem->symbol);
     int v= 0;
     for(tr_temp = tem->tstate; tr_temp != NULL; tr_temp = tr_temp->hh.next){
 
-      (v > is_mul)?is_mul=v:is_mul;
+      if(v > is_mul)is_mul=v;
       new_state->edges[new_state->edge_count].mem_count++;
      
       new_state->edges[new_state->edge_count].estate[new_state->edges[new_state->edge_count].mem_count] = malloc(sizeof(char) * strlen(tr_temp->tarnsfer_state));
      
 	
-      strcpy(new_state->edges[new_state->edge_count].estate[new_state->edges[new_state->edge_count].mem_count] , tr_temp->tarnsfer_state);
+      new_state->edges[new_state->edge_count].estate[new_state->edges[new_state->edge_count].mem_count] = tr_temp->tarnsfer_state;
 
     }
 
@@ -330,22 +358,25 @@ void post_merge(m_t merge, nfa_t nfa, char* new_state_name){
   printf("ADDED A NEW STATE %s with count %d\n",new_state->state,nfa->state_count+1);   
   nfa->states = realloc(nfa->states, sizeof(s) * (nfa->state_count +1) );
   nfa->states[nfa->state_count] = *new_state;	
-
+ 
+  printf("MUL IS %d\n" ,is_mul);
     
   insert_into_state(new_state->state, is_mul);
   /* a new entry to dfa */
-   
 }
-
 void merge_states(s_t state, nfa_t nfa){
 
   for(int i=0; i <= state->edge_count; i++){
-
     if(state->edges[i].mem_count > 0){
       m_t merged =NULL;
-      tr_t tra = NULL;
+      m_t temp_merged =NULL;
+    tr_t tra = NULL;
+      tr_t temp_trans = NULL;
+
       char* temp =NULL;
+	        
       for(int j =0 ; j <= state->edges[i].mem_count; j++){
+     
 	if(temp == NULL){
 	  temp = malloc(sizeof(char) * strlen(state->edges[i].estate[j]));
 	  strcpy(temp, state->edges[i].estate[j]);
@@ -354,41 +385,60 @@ void merge_states(s_t state, nfa_t nfa){
 	  temp = realloc(temp, sizeof(char) * (strlen(temp)+strlen(state->edges[i].estate[j])));
 	  strcat(temp, state->edges[i].estate[j]);
 	}
-
 	s_t curr_state = find_state(state->edges[i].estate[j], nfa);
-	if(curr_state->edge_count == -1)
-	  {
-	    continue;
-	  }
+	if(curr_state->edge_count == -1)	    continue;
+	  
 	for(int x=0; x <= curr_state->edge_count; x++){
-	  m_t temp_merged =NULL;
-	  HASH_FIND_STR(merged, &curr_state->edges[x].symbol, temp_merged);
+	  printf("FINIFN SYMBOL IN MERGED %s for state %s", curr_state->edges[x].symbol, curr_state->state);
+	  HASH_FIND_STR(merged, curr_state->edges[x].symbol, temp_merged);
 	  if(temp_merged == NULL){
 	    temp_merged = malloc(sizeof(m));
-	    temp_merged->symbol =malloc(sizeof(char) * 1);
-	    strcpy(temp_merged->symbol, &curr_state->edges[x].symbol);
+	    temp_merged->symbol = malloc(sizeof(char) * 2);
+	    strcpy(temp_merged->symbol, curr_state->edges[x].symbol);
 	    HASH_ADD_STR(merged, symbol, temp_merged);
 	  }
 
 	  for(int y=0; y <= curr_state->edges[x].mem_count; y++){
-	    tr_t temp_trans = NULL;
-	    
-	    HASH_FIND_STR(tra, curr_state->edges[x].estate[y], temp_trans);
+	    HASH_FIND_STR(temp_merged->tstate, curr_state->edges[x].estate[y], temp_trans);
 	    if( temp_trans == NULL){
 	      temp_trans = malloc(sizeof(tr));
 	      temp_trans->tarnsfer_state = malloc(sizeof(char) * strlen(curr_state->edges[x].estate[y]));
 	      strcpy(temp_trans->tarnsfer_state, curr_state->edges[x].estate[y]);
-	      HASH_ADD_STR(tra, tarnsfer_state, temp_trans);
+	      HASH_ADD_STR(temp_merged->tstate, tarnsfer_state, temp_trans);
 	    }
 	  }
 	}
+	/* DEBUG */
+	  tr_t q=NULL, rmp=NULL;
+	  HASH_ITER(hh, tra, q, rmp){
+	    printf(" transition %s\n", q->tarnsfer_state);
+	  }
+
+	/* END DEBUG */	
+
 	/* add to the key {'o' : {'10'}, {'11'} } */
-	HASH_ADD_STR(merged->tstate, tarnsfer_state, tra); 
+	/* HASH_ADD_STR(temp_merged->tstate, tarnsfer_state, tra);  */
+
+      }
+
+      /* DEBUG */
+	m_t s, tmp;
+	HASH_ITER(hh, merged, s, tmp) {
+	  printf(" name %s\n", s->symbol);
+	  tr_t q, rmp;
+	  HASH_ITER(hh, s->tstate, q, rmp){
+	    printf(" transition %s\n", q->tarnsfer_state);
+	  }
+	  /* ... it is safe to delete and free s here */
+	}
+
+	/* END DEBUG */
 
 	/* check if the merged state name already exists
 	   in the nfa table if it exists do nothing else
 	   use the mergerd hash table to form a new entry in nfa
 	*/
+     	
 	if(find_state(temp,nfa) == NULL)
 	  post_merge(merged, nfa, temp);
 
@@ -398,22 +448,21 @@ void merge_states(s_t state, nfa_t nfa){
 	  /* check if state already exists in dfa state hash */
 	  HASH_FIND_STR(dfa_state, temp, dfa_exists );
 	  if(dfa_exists == NULL){
-
+	    insert_dfa(temp);
+	  }
+	  else{
 	    printf("MERGED STATES %s ALREADY EXISTS both in nfa, dfa\n", temp);
 
 	  }
-	  else{
-	    insert_dfa(temp);
-	  }
 	}
-      }
-      free(merged);
-      free(tra);
+      
+
     }
 
     else{
 
       printf("SINGLE STATE: %s\n",state->edges[i].estate[0]);
+
       /*  add the state if not exists */
 
       nfa_table_t dfa_exists = NULL;
@@ -503,7 +552,7 @@ void print_dfa(nfa_t nfa){
 
     for(int j=0; j <= nfa->states[i].edge_count; j++){
 
-      printf("%s ---( %c )---> %s\n", nfa->states[i].state, nfa->states[i].edges[j].symbol, nfa->states[i].edges[j].estate[0]);
+      printf("%s ---( %s )---> %s\n", nfa->states[i].state, nfa->states[i].edges[j].symbol, nfa->states[i].edges[j].estate[0]);
 
     }
   }
