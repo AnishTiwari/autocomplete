@@ -1,5 +1,5 @@
 run: compile
-	./autocomplete "oo"
+	./autocomplete "LEASEFINANCE"
 
 compile:
 	gcc autocomplete.c -o autocomplete -Wall -g

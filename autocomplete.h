@@ -33,7 +33,7 @@ struct state {
 struct edge {
   char* symbol;
   int mem_count;
- char *estate[6];
+ char *estate[10];
  
 };
 
@@ -65,13 +65,5 @@ struct transition{
 struct merger{
   char* symbol;
   tr_t tstate;
-  UT_hash_handle hh;
-};
-
-typedef struct symbol_table sym;
-typedef sym* sym_t;
-
-struct symbol_table{
-  char* symbol;
   UT_hash_handle hh;
 };
