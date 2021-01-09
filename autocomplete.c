@@ -22,6 +22,20 @@ s_t find_state(char* state_name, nfa_t nfa){
   return NULL;
 }
 
+void find_and_change(char* new_state_name, char* state_name, nfa_t nfa_, int x){
+
+
+  for(int p=0; p <= nfa_->state_count; p++){
+    if( strcmp(nfa_->states[p].state, state_name) == 0){
+      nfa_->states[p].edges[x].mem_count = 0;
+      
+      nfa_->states[p].edges[x].estate[0] = realloc(nfa_->states[p].edges[x].estate[0],sizeof(char) * strlen(new_state_name));
+      strcpy(nfa_->states[p].edges[x].estate[0] , new_state_name);
+      return;
+    }
+  }
+}
+
 void insert_dfa(char* dfa_state_name){
   nfa_table_t new_dfa_state = NULL;
   new_dfa_state = malloc(sizeof(nfa_table));
@@ -39,6 +53,7 @@ void insert_into_state(char* s_name, int is_multiple){
   main_t new_idx = malloc(sizeof(main_hash));
   new_idx->idx = idx_v;
   main_t temp_main = NULL;
+
   /* HASH_FIND_INT(global_state_table, &idx_v, temp_main); */
   if (temp_main == NULL){
     HASH_ADD_INT(global_state_table, idx, new_idx);
@@ -61,7 +76,7 @@ void insert_into_state(char* s_name, int is_multiple){
     HASH_ADD_STR(new_idx->nfa_table, state_name, new_state);
   }
   else{
-    printf("GOLDEN EROR\n");
+    printf("GOLDEN ERROR\n");
   }
 
   /* print the global state table */
@@ -89,7 +104,7 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
       new_e_correct->mem_count = -1;
       new_e_correct->symbol = NULL;
       new_e_correct->symbol = malloc(sizeof(char) * 2);
-strncpy(new_e_correct->symbol, &word[i], 1) ;
+      strncpy(new_e_correct->symbol, &word[i], 1) ;
       /* new_e_correct->symbol = &word[i]; */
 
       printf("==%s==",&word[i]);
@@ -273,7 +288,7 @@ strncpy(new_e_correct->symbol, &word[i], 1) ;
   else {
     nfa->state_count++;
     
-        printf("ADDing %s state at %d loc in nfa \n", final_state->state, nfa->state_count);
+    printf("ADDing %s state at %d loc in nfa \n", final_state->state, nfa->state_count);
     nfa->states = realloc(nfa->states, sizeof(s) * (nfa->state_count +1) );
     nfa->states[nfa->state_count] = *final_state;	
   }
@@ -290,7 +305,7 @@ void print_nfa(nfa_t nfa){
       {
 	for(int j=0; j <= nfa->states[i].edge_count; j++){
 	  for(int k =0;k <= nfa->states[i].edges[j].mem_count;k++){
-	printf("%s ---( %s )--> %s\n", nfa->states[i].state, nfa->states[i].edges[j].symbol, nfa->states[i].edges[j].estate[k]);
+	    printf("%s ---( %s )--> %s\n", nfa->states[i].state, nfa->states[i].edges[j].symbol, nfa->states[i].edges[j].estate[k]);
 	  }
 	}
       }
@@ -308,21 +323,19 @@ void print_dfa_hash(){
 }
 
 void post_merge(m_t merge, nfa_t nfa, char* new_state_name){
-  printf("POSTTTTTTTTTTTTTTTT\n");
-	  printf("<<%s $$$$$$\n",nfa->states[4].state);
 
-  /* DEBUG */
-	m_t s, tmp;
-	HASH_ITER(hh, merge, s, tmp) {
-	  printf(" name %s\n", s->symbol);
-	  tr_t q, rmp;
-	  HASH_ITER(hh, s->tstate, q, rmp){
-	    printf(" transition %s\n", q->tarnsfer_state);
-	  }
-	  /* ... it is safe to delete and free s here */
-	}
+  /* /\* DEBUG *\/ */
+  /* 	m_t s, tmp; */
+  /* 	HASH_ITER(hh, merge, s, tmp) { */
+  /* 	  printf(" name %s\n", s->symbol); */
+  /* 	  tr_t q, rmp; */
+  /* 	  HASH_ITER(hh, s->tstate, q, rmp){ */
+  /* 	    printf(" transition %s\n", q->tarnsfer_state); */
+  /* 	  } */
+  /* 	  /\* ... it is safe to delete and free s here *\/ */
+  /* 	} */
 
-	/* END DEBUG */
+  /* 	/\* END DEBUG *\/ */
 
   m_t tem = NULL;
 
@@ -368,12 +381,10 @@ void post_merge(m_t merge, nfa_t nfa, char* new_state_name){
   printf("NEW STATE PRINT ====>\n %s state name, %d state edges\n",new_state->state,new_state->edge_count);
   nfa->state_count +=1;
   printf("ADDED A NEW STATE %s with count %d sym %s\n",new_state->state,nfa->state_count+1, new_state->edges[0].symbol);
-  printf("llllll%s %d$$$$$$\n",nfa->states[4].state, nfa->states[4].edge_count);
-
+ 
   /* nfa->states = realloc(nfa->states, sizeof(s) * (nfa->state_count + 1 ) ); */
   
-  printf("llllll%s %d$$$$$$\n",nfa->states[4].state, nfa->states[4].edge_count);
-
+ 
   nfa->states[nfa->state_count] = *new_state;
   /* nfa->states[nfa->state_count].state = malloc(sizeof(char)* strlen(new_state->state)); */
   /* nfa->states[nfa->state_count].state = new_state->state; */
@@ -385,13 +396,14 @@ void post_merge(m_t merge, nfa_t nfa, char* new_state_name){
   insert_into_state(new_state->state, is_mul);
   /* a new entry to dfa */
 }
+
 void merge_states(s_t state, nfa_t nfa){
 
   for(int i=0; i <= state->edge_count; i++){
     if(state->edges[i].mem_count > 0){
       m_t merged =NULL;
       m_t temp_merged =NULL;
-    tr_t tra = NULL;
+      tr_t tra = NULL;
       tr_t temp_trans = NULL;
 
       char* temp =NULL;
@@ -430,10 +442,10 @@ void merge_states(s_t state, nfa_t nfa){
 	  }
 	}
 	/* DEBUG */
-	  tr_t q=NULL, rmp=NULL;
-	  HASH_ITER(hh, tra, q, rmp){
-	    printf(" transition %s\n", q->tarnsfer_state);
-	  }
+	tr_t q=NULL, rmp=NULL;
+	HASH_ITER(hh, tra, q, rmp){
+	  printf(" transition %s\n", q->tarnsfer_state);
+	}
 
 	/* END DEBUG */	
 
@@ -443,44 +455,43 @@ void merge_states(s_t state, nfa_t nfa){
       }
 
       /* DEBUG */
-	m_t s, tmp;
-	HASH_ITER(hh, merged, s, tmp) {
-	  printf(" name %s\n", s->symbol);
-	  tr_t q, rmp;
-	  HASH_ITER(hh, s->tstate, q, rmp){
-	    printf(" transition %s\n", q->tarnsfer_state);
-	  }
-	  /* ... it is safe to delete and free s here */
+      m_t s, tmp;
+      HASH_ITER(hh, merged, s, tmp) {
+	printf(" name %s\n", s->symbol);
+	tr_t q, rmp;
+	HASH_ITER(hh, s->tstate, q, rmp){
+	  printf(" transition %s\n", q->tarnsfer_state);
 	}
+	/* ... it is safe to delete and free s here */
+      }
 
-	/* END DEBUG */
+      /* END DEBUG */
 
-	/* check if the merged state name already exists
-	   in the nfa table if it exists do nothing else
-	   use the mergerd hash table to form a new entry in nfa
-	*/
-	  printf("%s $$$$$$\n",nfa->states[4].state);
-     	
-	if(find_state(temp,nfa) == NULL)
+      /*  check if the merged state name already exists
+       *  in the nfa table if it exists do nothing else
+       *  use the mergerd hash table to form a new entry in nfa
+       */
+      find_and_change(temp, state->state, nfa,i);
+	   
+      if(find_state(temp,nfa) == NULL)
+	{
+	  printf("%s has come for replacement with %s\n", state->state, temp);
 	  post_merge(merged, nfa, temp);
-
-	else{
-	  printf("%s already exists in nfa\n", temp);
-	  nfa_table_t dfa_exists = NULL;
-	  /* check if state already exists in dfa state hash */
-	  HASH_FIND_STR(dfa_state, temp, dfa_exists );
-	  if(dfa_exists == NULL){
-	    insert_dfa(temp);
-	  }
-	  else{
-	    printf("MERGED STATES %s ALREADY EXISTS both in nfa, dfa\n", temp);
-
-	  }
 	}
-		  printf(">%s $$$$$$\n",nfa->states[4].state);
+      else{
+	printf("%s already exists in nfa\n", temp);
+	nfa_table_t dfa_exists = NULL;
+	/* check if state already exists in dfa state hash */
+	HASH_FIND_STR(dfa_state, temp, dfa_exists );
+	if(dfa_exists == NULL){
+	  insert_dfa(temp);
+	}
+	else{
+	  printf("MERGED STATES %s ALREADY EXISTS both in nfa, dfa\n", temp);
 
-      
-
+	}
+      }
+     
     }
 
     else{
@@ -515,7 +526,6 @@ void merge_states(s_t state, nfa_t nfa){
 
 void construct_dfa(nfa_t nfa){
 
-  print_dfa_hash();  
   int i = 0;
 
   while( i <= INITIAL_COUNT){
@@ -532,12 +542,10 @@ void construct_dfa(nfa_t nfa){
       if(st != NULL){
 
 	if( get_state->nfa_table->is_multiple > 0){
+
 	  /* merge the multiple states for all input symbols */	   
 	  printf("GOT TO MERGE STATES\n");
-	  printf("%s $$$$$$\n",nfa->states[4].state);
-
 	  merge_states(st, nfa);
-	  printf("%s $$$$$$\n",nfa->states[4].state);
 	}
 
 	else {
