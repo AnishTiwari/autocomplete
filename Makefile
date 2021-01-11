@@ -1,5 +1,10 @@
+CFLAGS=-DDEBUG -g -Wall
+
+
 run: compile
-	./autocomplete "LEASEFINANCE"
+	./autocomplete "oo"
+
+
 
 compile:
-	gcc autocomplete.c -o autocomplete -Wall -g
+	gcc autocomplete.c -o autocomplete $(CFLAGS)

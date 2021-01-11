@@ -25,45 +25,46 @@ typedef struct merger m;
 typedef m* m_t;
 
 struct state {
-  char* state;
-  e_t edges;
-  int edge_count;
+	char* state;
+	e_t edges;
+	int edge_count;
+	int state_idx;
 };
 
 struct edge {
-  char* symbol;
-  int mem_count;
- char *estate[10];
- 
+	char* symbol;
+	int mem_count;
+	char *estate[10];
+
 };
 
 struct nfa{
-  s_t states;
-  int state_count;
+	s_t states;
+	int state_count;
 };
 
 
 struct nfa_state_table{
-
-  char* state_name;
-   UT_hash_handle hh;
-  int is_multiple;
+	char* state_name;
+	UT_hash_handle hh;
+	int is_multiple;
+	int state_idx;
+	
 };
 
 struct main_hash_table{
-  int idx;
-  nfa_table_t nfa_table;
-  UT_hash_handle hh;
-
+	int idx;
+	nfa_table_t nfa_table;
+	UT_hash_handle hh;
 };
 
 struct transition{
-  char* tarnsfer_state;
-  UT_hash_handle hh;
+	char* tarnsfer_state;
+	UT_hash_handle hh;
 };
 
 struct merger{
-  char* symbol;
-  tr_t tstate;
-  UT_hash_handle hh;
+	char* symbol;
+	tr_t tstate;
+	UT_hash_handle hh;
 };
