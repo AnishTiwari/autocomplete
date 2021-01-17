@@ -558,9 +558,9 @@ void construct_dfa(nfa_t nfa){
 
 
 void find_all_words(nfa_t nfa){
-	FILE *fp = fopen("/usr/share/dict/words", "r");
+	FILE *fp = fopen("words", "r");
 	if(fp == NULL){
-		fprintf(stderr, "Could not read input word list\n");
+		printf("Could not read input word list\n");
 		exit(1);
 	}
 	printf("MATCHD WORDS ARE:\n");
@@ -630,7 +630,7 @@ int main(int argc, char *argv[]){
 		word = argv[1];
 
 	else {
-		fprintf(stderr, "Invalid arguments EXITING\n\n");
+		printf( "Invalid arguments EXITING\n\n");
 		exit(1);
 	}
 
