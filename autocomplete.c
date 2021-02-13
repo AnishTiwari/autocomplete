@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<dirent.h>
 
 #include "autocomplete.h"
 
@@ -104,9 +105,10 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
 			new_e_correct->symbol = NULL;
 			new_e_correct->symbol = malloc(sizeof(char) * 2);
 			strncpy(new_e_correct->symbol, &word[i], 1) ;
+				new_e_correct->symbol[1]='\0';
 			/* new_e_correct->symbol = &word[i]; */
 
-			printf("==%s==",&word[i]);
+			printf("||==%s==||",new_e_correct->symbol);
 
 			char* temp = NULL;
 			temp = malloc(sizeof(char)* 2);
@@ -235,7 +237,9 @@ nfa_t construct_nfa(nfa_t nfa, char* word, int dist, int word_l){
 			last_edge->symbol = NULL;
 			last_edge->symbol = malloc(sizeof(char) * 2);
 			strncpy(last_edge->symbol, &word[i], 1) ;
-
+			last_edge->symbol[1]='\0';
+			
+			printf("|||||(%s)%d%d\n", last_edge->symbol,i,j);
 			/* strcpy(last_edge->symbol , &word[i]); */
 			last_edge->mem_count = -1;
 			char* final_temp =NULL;
@@ -342,10 +346,12 @@ void post_merge(m_t merge, nfa_t nfa, char* new_state_name){
 	/* iterate through all symbols */
 	for(tem=merge; tem!= NULL; tem=tem->hh.next){
 		int v=0;
+				/* printf("**************(%s)", tem->symbol); */
+			
 		tr_t tr_temp = NULL;
 		e_t ed =NULL;
 		ed = malloc(sizeof(e));
-		ed->symbol = malloc(sizeof(char) *2);
+		ed->symbol = malloc(sizeof(char) *1);
 		strcpy(ed->symbol , tem->symbol);
 		ed->mem_count = -1;
 		for(tr_temp = tem->tstate; tr_temp != NULL; tr_temp = tr_temp->hh.next){
@@ -411,6 +417,7 @@ void merge_states(s_t state, nfa_t nfa){
 				if(curr_state->edge_count == -1)	    continue;
 
 				for(int x=0; x <= curr_state->edge_count; x++){
+					/* printf("--------=======->%s", curr_state->edges[x].symbol); */
 					HASH_FIND_STR(merged, curr_state->edges[x].symbol, temp_merged);
 					if(temp_merged == NULL){
 						temp_merged = malloc(sizeof(m));
@@ -420,6 +427,7 @@ void merge_states(s_t state, nfa_t nfa){
 					}
 
 					for(int y=0; y <= curr_state->edges[x].mem_count; y++){
+
 						HASH_FIND_STR(temp_merged->tstate, curr_state->edges[x].estate[y], temp_trans);
 						if( temp_trans == NULL){
 							temp_trans = malloc(sizeof(tr));
@@ -558,10 +566,26 @@ void construct_dfa(nfa_t nfa){
 
 
 void find_all_words(nfa_t nfa){
-	FILE *fp = fopen("words", "r");
-	if(fp == NULL){
+
+
+   DIR *dir;
+    struct dirent *de;
+
+    dir = opendir("."); /*your directory*/
+    while(dir)
+    {
+        de = readdir(dir);
+        if (!de) break;
+        printf("%i %s\n", de->d_type, de->d_name);
+    }
+    closedir(dir);
+    
+	FILE *fp = fopen("./words/words.txt", "r");
+
+
+    if(fp == NULL){
 		printf("Could not read input word list\n");
-		exit(1);
+		return;
 	}
 	printf("MATCHD WORDS ARE:\n");
 	char curr_char;
@@ -572,6 +596,7 @@ void find_all_words(nfa_t nfa){
 	int break_word=0;
 	while ((curr_char = fgetc(fp)) != EOF)
 	{
+		/* printf("%c",curr_char); */
 		if(curr_char == '\n'){
 			if(initial == 8 && break_word != 1){
 				wc++;
@@ -620,7 +645,7 @@ void find_all_words(nfa_t nfa){
 	}
 	fclose (fp);
      
-	printf("WORD COUNT IS %d\n", wc);       
+	fprintf(stdout, "WORD COUNT IS %d\n", wc);       
 }
 
 int main(int argc, char *argv[]){
@@ -644,11 +669,12 @@ int main(int argc, char *argv[]){
 
 	nfa = construct_nfa(nfa, word, lev_dist, word_len);
 
-	construct_dfa(nfa);
-
-	printf("%d states\n", nfa->state_count+1);
+		printf("%d states\n", nfa->state_count+1);
 
 	print_nfa(nfa);
+
+	construct_dfa(nfa);
+
 
 	printf("FINAL DFA STATE TABLE \n");
 	nfa_table_t final,temp =NULL;
